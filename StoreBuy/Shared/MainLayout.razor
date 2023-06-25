@@ -1,0 +1,40 @@
+﻿@inherits LayoutComponentBase
+@using StoreBuy.Shared
+
+<PageTitle>BlazorApp1</PageTitle>
+
+
+<MainContainer>
+    <HeaderRegion>
+        <Header>
+            <BrandingRegion>
+                <Branding Icon="store">Lagern & Kaufen</Branding>
+            </BrandingRegion>
+            <Actions>
+                <LoggedIn />
+            </Actions>
+        </Header>
+    </HeaderRegion>
+    <SideNavigationRegion>
+        <VerticalNav HasIcons="true">
+            <NavItem Icon="home" href="">
+                Home
+            </NavItem>
+            <NavItem Icon="tags" href="products">
+                Logistikzentrum
+            </NavItem>
+            <NavItem Icon="shopping-cart" href="store">
+                Kaufhalle
+            </NavItem>
+            <NavItem Icon="bank" href="bank">
+                Bank
+            </NavItem>
+            <NavItem Icon="objects" href="properties">
+                Eigentum
+            </NavItem>
+        </VerticalNav>
+    </SideNavigationRegion>
+    <ContentArea>
+        @Body
+    </ContentArea>
+</MainContainer>

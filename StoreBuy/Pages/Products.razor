@@ -1,0 +1,54 @@
+﻿@page "/products"
+@using StoreBuy.Data
+@inject ProductService productService
+
+<h3>Produkte</h3>
+
+@if (allProducts == null)
+{
+	<Spinner>wird geladen...</Spinner>
+} else
+{
+	<a href="AddProduct" class="btn btn-primary">+Produkt</a>
+	<Datagrid TRowData="Product" Items="allProducts" RowClicked="(u) => RowClicked(u)" RowClass="DynamicRowClass">
+		<DatagridColumn Title="Id" TRowData="Product" Field="c => c.Id" CanSort="true" />
+		<DatagridColumn Title="Name" TRowData="Product" Field="c => c.Name" CanSort="true" />
+		<DatagridColumn TRowData="Product" Field="c => c.getPrice()" CanSort="true">
+			<HeaderTemplate>
+				<clr-icon shape="euro"></clr-icon> Preis
+			</HeaderTemplate>
+		</DatagridColumn>
+		<DatagridColumn TRowData="Product" Field="c => c.getPrice()" CanSort="true">
+			<HeaderTemplate>
+				<clr-icon shape="pencil"></clr-icon> Aktionen
+			</HeaderTemplate>
+			<ChildContent>
+				<a href="EditProduct/@context.Id" class="btn btn-secondary">ändern</a>
+				<a href="DeleteProduct/@context.Id" class="btn btn-danger">löschen</a>
+			</ChildContent>
+		</DatagridColumn>
+		<DatagridFooter TRowData="Product">
+			<DatagridFooterDescription TRowData="Product">@allProducts.Count Produkte</DatagridFooterDescription>
+		</DatagridFooter>
+	</Datagrid>
+}
+@code {
+	List<Product> allProducts;
+	public Product LastClickedRow { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+		allProducts = await productService.GetAllProducts();
+	}
+	public void RowClicked(Blazority.Shared.MouseEventData<Product> e)
+	{
+		LastClickedRow = e.Data;
+	}
+
+	public string DynamicRowClass(Product row, int index)
+	{
+		// NOTE: row-selected class is a built-in datagrid class
+		return row == LastClickedRow ? "row-selected" : "";
+	}
+}

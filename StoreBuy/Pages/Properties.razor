@@ -1,0 +1,61 @@
+﻿@using StoreBuy.Data
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+
+@inject CostumerProductService costumerProductService
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject UserManager<Costumer> userManager;
+
+@page "/properties"
+
+<h3>Eigentum</h3>
+
+@if (properties == null)
+{
+	<center><Spinner>wird geladen...</Spinner></center>
+}
+else
+{
+	<Datagrid TRowData="Product" Items="properties" RowClicked="(u) => RowClicked(u)" RowClass="DynamicRowClass">
+		<DatagridColumn Title="Id" TRowData="Product" Field="c => c.Id" CanSort="true" />
+		<DatagridColumn Title="Name" TRowData="Product" Field="c => c.Name" CanSort="true" />
+		<DatagridColumn TRowData="Product" Field="c => c.getPrice()" CanSort="true">
+			<HeaderTemplate>
+				<clr-icon shape="euro"></clr-icon> Preis
+			</HeaderTemplate>
+		</DatagridColumn>
+		<DatagridFooter TRowData="Product">
+			<DatagridFooterDescription TRowData="Product">@properties.Count Produkte</DatagridFooterDescription>
+		</DatagridFooter>
+	</Datagrid>
+}
+
+@code {
+	public Product LastClickedRow;
+	private List<Product> properties;
+	private Costumer user;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+		var authState = await authenticationStateProvider
+			.GetAuthenticationStateAsync();
+		var userName = authState.User;
+
+		if (userName.Identity.IsAuthenticated)
+		{
+			user = await userManager.FindByNameAsync(userName.Identity.Name);
+			properties = await costumerProductService.UserEntries(user, true);
+		}
+
+	}
+	public void RowClicked(Blazority.Shared.MouseEventData<Product> e)
+	{
+		LastClickedRow = e.Data;
+	}
+	public string DynamicRowClass(Product row, int index)
+	{
+		// NOTE: row-selected class is a built-in datagrid class
+		return row == LastClickedRow ? "row-selected" : "";
+	}
+}

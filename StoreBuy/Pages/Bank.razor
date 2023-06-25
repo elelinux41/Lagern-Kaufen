@@ -1,0 +1,52 @@
+﻿@page "/bank"
+@using StoreBuy.Data
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Identity;
+@using System.ComponentModel.DataAnnotations;
+
+@attribute [Authorize]
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject UserManager<Costumer> userManager;
+@inject NavigationManager navigationManager
+
+<h3>Bank</h3>
+@if (user == null)
+{
+    <Spinner>wird geladen...</Spinner>
+} else
+{
+    <p align="right">Kontostand: @user.Money €</p>
+
+    <Form Model="@transferal">
+        <Number Label="überweisen lassen" @bind-Value="@transferal.Value" HelpText="@($"{transferal.Value}€")" />
+        <Button Variant="Primary" @onclick="@chargeMoney">Überweisen</Button>
+    </Form>
+
+}
+@code {
+    private Costumer user;
+    private Transferal transferal = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        var authState = await authenticationStateProvider
+            .GetAuthenticationStateAsync();
+        var userName = authState.User;
+
+        if (userName.Identity.IsAuthenticated)
+        {
+            user = await userManager.FindByNameAsync(userName.Identity.Name);
+        }
+    }
+    protected async void chargeMoney()
+    {
+        user.Money += transferal.Value;
+        await userManager.UpdateAsync(user);
+    }
+    protected class Transferal
+    {
+        [Range(0,99999999, ErrorMessage="nur positive Beträge können überwiesen werden")]
+        public int Value { get; set; }
+    }
+}

@@ -1,0 +1,34 @@
+﻿@page "/deleteProduct/{id}"
+@using StoreBuy.Data
+@inject ProductService productService
+@inject NavigationManager navigationManager
+
+<h3>Produkt löschen</h3>
+
+<Form Model="@product">
+	<Text Label="Name" Disabled="true" @bind-Value="@product.Name" />
+	<Button Variant="Primary" @onclick="@RemoveProduct">löschen</Button>
+	<Button Variant="Warning" @onclick="@Cancel">abbrechen</Button>
+</Form>
+
+@code {
+	[Parameter]
+	public string Id { get; set; }
+	Product product = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+		product = await productService.GetProductById(Convert.ToInt32(Id));
+
+	}
+	protected async void RemoveProduct()
+	{
+		await productService.RemoveProduct(product);
+		navigationManager.NavigateTo("Products");
+	}
+	void Cancel()
+	{
+		navigationManager.NavigateTo("Products");
+	}
+}

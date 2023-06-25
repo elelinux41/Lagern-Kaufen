@@ -1,0 +1,9 @@
+﻿@page "/tooLittleMoney"
+@inject NavigationManager navigationManager
+
+<Button Icon="undo" Variant="primary" @onclick='() => navigationManager.NavigateTo("buy")'>Zurück</Button>
+<Alert Type="AlertType.Danger">
+    <AlertItem>
+        <AlertText>Sie haben zu wenig Geld, um alle Produkte zu kaufen. Gehen Sie zu Bank oder entfernen Sie einige Produkte.</AlertText>
+    </AlertItem>
+</Alert>

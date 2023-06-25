@@ -1,0 +1,37 @@
+﻿@page "/editProduct/{Id}"
+@using StoreBuy.Data
+@inject ProductService productService
+@inject NavigationManager navigationManager
+
+<h3>Produkt abändern</h3>
+
+<Form Model="@product">
+	<Text Label="alter Name" Disabled="true" @bind-Value="oldName"/>
+	<Text Label="Name" @bind-Value="product.Name" />
+	<Number Label="Price" @bind-Value="product.Price" />
+	<Button Variant="Primary" @onclick="@UpdateProduct">ändern</Button>
+	<Button Variant="Warning" @onclick="@Cancel">abbrechen</Button>
+</Form>
+
+@code {
+	[Parameter]
+	public string Id { get; set; }
+	public string oldName;
+	Product product = new();
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+		product = await productService.GetProductById(Convert.ToInt32(Id));
+		oldName = product.Name;
+	}
+	protected async void UpdateProduct()
+	{
+		await productService.UpdateProduct(product);
+		navigationManager.NavigateTo("Products");
+	}
+	void Cancel()
+	{
+		navigationManager.NavigateTo("Products");
+	}
+}

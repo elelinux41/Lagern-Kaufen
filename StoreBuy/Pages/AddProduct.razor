@@ -1,0 +1,29 @@
+﻿@page "/addProduct"
+@using StoreBuy.Data
+@using System.ComponentModel.DataAnnotations
+@inject ProductService productService
+@inject NavigationManager navigationManager
+
+<h3>+ Produkt</h3>
+
+<Form Model="@newProduct">
+	<Text Label="Name" @bind-Value="newProduct.Name" />
+	<Number Label="Price" @bind-Value="newProduct.Price" />
+	<Button Variant="Primary" @onclick="@CreateProduct">hinzufügen</Button>
+	<Button Variant="Warning" @onclick="@Cancel">abbrechen</Button>
+</Form>
+
+@code {
+
+	Product newProduct = new();
+
+	protected async void CreateProduct()
+	{
+		await productService.InsertProduct(newProduct);
+		navigationManager.NavigateTo("Products");
+	}
+	void Cancel()
+	{
+		navigationManager.NavigateTo("Products");
+	}
+}

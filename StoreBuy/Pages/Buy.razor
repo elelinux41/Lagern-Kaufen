@@ -1,0 +1,111 @@
+﻿@page "/buy"
+@using StoreBuy.Data
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+
+@inject ProductService productService
+@inject CostumerProductService costumerProductService
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject UserManager<Costumer> userManager;
+@inject NavigationManager navigationManager
+
+<h3>Einkaufswagen</h3>
+@if (user == null)
+{
+	<Spinner>wird geladen...</Spinner>
+}
+else
+{
+	<p align="right">Kontostand: @user.Money €</p>
+	<a href="Store" class="btn btn-primary">zurück zur Kaufhalle</a>
+	<Datagrid @ref="datagrid" TRowData="Product" Items="cart" RowClicked="(u) => RowClicked(u)" RowClass="DynamicRowClass" Placeholder="Tun Sie noch Produkte in den Einkaufswagen">
+		<DatagridColumn Title="Id" TRowData="Product" Field="c => c.Id" CanSort="true" />
+		<DatagridColumn Title="Name" TRowData="Product" Field="c => c.Name" CanSort="true" />
+		<DatagridColumn TRowData="Product" Field="c => c.getPrice()" CanSort="true">
+			<HeaderTemplate>
+				<clr-icon shape="euro"></clr-icon> Preis
+			</HeaderTemplate>
+		</DatagridColumn>
+		<DatagridColumn TRowData="Product" Field="c => c.getPrice()" CanSort="true">
+			<HeaderTemplate>
+				<clr-icon shape="pencil"></clr-icon> Aktionen
+			</HeaderTemplate>
+			<ChildContent>
+				<Button Icon="trash" Variant="danger" @onclick="() => removeFromCart(context)" />
+			</ChildContent>
+		</DatagridColumn>
+		<DatagridFooter TRowData="Product">
+			<DatagridFooterDescription TRowData="Product">@getTotalPrice() € Gesammtpreis</DatagridFooterDescription>
+		</DatagridFooter>
+	</Datagrid>
+	<Button Variant="danger" @onclick="@clearCart">Einkaufswagen leeren</Button>
+	<Button Icon="wallet" Variant="success" @onclick="@buyAll">Kaufen</Button>
+}
+
+@code {
+	public Datagrid<Product> datagrid;
+	public Product LastClickedRow;
+	private Costumer? user;
+	private List<Product> cart;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+		//allProducts = await productService.GetAllProducts();
+		var authState = await authenticationStateProvider
+			.GetAuthenticationStateAsync();
+		var userName = authState.User;
+
+		if (userName.Identity.IsAuthenticated)
+		{
+			user = await userManager.FindByNameAsync(userName.Identity.Name);
+			cart = await costumerProductService.UserEntries(user, false);
+		}
+	}
+	public void RowClicked(Blazority.Shared.MouseEventData<Product> e)
+	{
+		LastClickedRow = e.Data;
+	}
+
+	public string DynamicRowClass(Product row, int index)
+	{
+		// NOTE: row-selected class is a built-in datagrid class
+		return row == LastClickedRow ? "row-selected" : "";
+	}
+	private async void removeFromCart (Product product)
+	{
+		user.Products.Remove(product);
+		await userManager.UpdateAsync(user);
+		navigationManager.NavigateTo("buy", true);
+	}
+	private async void clearCart ()
+	{
+		foreach (Product p in cart)
+		{
+			user.Products.Remove(p);
+		}
+		await userManager.UpdateAsync(user);
+		navigationManager.NavigateTo("store");
+	}
+	private async void buyAll()
+	{
+		if (getTotalPrice() > user.Money)
+		{
+			navigationManager.NavigateTo("tooLittleMoney");
+			return;
+		}
+		user.Money -= getTotalPrice();
+		await costumerProductService.Buy(user);
+		await userManager.UpdateAsync(user);
+		navigationManager.NavigateTo("properties");
+	}
+	private int getTotalPrice()
+	{
+		int totalPrice = 0;
+		foreach (Product p in cart)
+		{
+			totalPrice += p.Price;
+		}
+		return totalPrice;
+	}
+}

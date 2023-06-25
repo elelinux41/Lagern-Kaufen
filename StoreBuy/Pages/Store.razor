@@ -1,0 +1,92 @@
+﻿@page "/store"
+@using StoreBuy.Data
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Identity
+
+@inject ProductService productService
+@inject CostumerProductService costumerProductService
+@inject AuthenticationStateProvider authenticationStateProvider
+@inject UserManager<Costumer> userManager
+@inject NavigationManager navigationManager
+
+<h3>Kaufhalle</h3>
+
+@if (allProducts == null)
+{
+	<Spinner>wird geladen...</Spinner>
+}
+else
+{
+	<p align="right">Kontostand: @user.Money €</p>
+	<a href="Buy" class="btn btn-primary">zur Kasse</a>
+	<Datagrid TRowData="Product" Items="allProducts" RowClicked="(u) => RowClicked(u)" RowClass="DynamicRowClass">
+		<DatagridColumn Title="Id" TRowData="Product" Field="c => c.Id" CanSort="true" />
+		<DatagridColumn Title="Name" TRowData="Product" Field="c => c.Name" CanSort="true" />
+		<DatagridColumn TRowData="Product" Field="c => c.getPrice()" CanSort="true">
+			<HeaderTemplate>
+				<clr-icon shape="euro"></clr-icon> Preis
+			</HeaderTemplate>
+		</DatagridColumn>
+		<DatagridColumn TRowData="Product" Field="c => c.getPrice()" CanSort="true">
+			<HeaderTemplate>
+				<clr-icon shape="pencil"></clr-icon> Aktionen
+			</HeaderTemplate>
+			<ChildContent>
+				@if (user.Products.Contains(context))
+				{
+					<Button Icon="shopping-cart" Variant="primary" @onclick="() => addToCart(context)" disabled />
+					<Button Icon="wallet" Variant="success" @onclick="() => addToCart(context, true)" disabled />
+				
+				} else
+				{
+					<Button Icon="shopping-cart" Variant="primary" @onclick="() => addToCart(context)" />
+					<Button Icon="wallet" Variant="success" @onclick="() => addToCart(context, true)" />
+				}
+			</ChildContent>
+		</DatagridColumn>
+		<DatagridFooter TRowData="Product">
+			<DatagridFooterDescription TRowData="Product">@allProducts.Count Produkte</DatagridFooterDescription>
+		</DatagridFooter>
+	</Datagrid>
+}
+
+@code {
+	public Product LastClickedRow;
+	private List<Product> allProducts;
+	private Costumer? user;
+	private List<Product> usedProducts;
+
+	protected override async Task OnInitializedAsync()
+	{
+		await base.OnInitializedAsync();
+		allProducts = await productService.GetAllProducts();
+		var authState = await authenticationStateProvider
+			.GetAuthenticationStateAsync();
+		var userName = authState.User;
+
+		if (userName.Identity.IsAuthenticated)
+		{
+			user = await userManager.FindByNameAsync(userName.Identity.Name);
+			usedProducts = await costumerProductService.UserEntries(user, null);
+		}
+	}
+	public void RowClicked(Blazority.Shared.MouseEventData<Product> e)
+	{
+		LastClickedRow = e.Data;
+	}
+
+	public string DynamicRowClass(Product row, int index)
+	{
+		// NOTE: row-selected class is a built-in datagrid class
+		return row == LastClickedRow ? "row-selected" : "";
+	}
+	public async void addToCart(Product product, bool routeToBuy = false)
+	{
+		user.Products.Add(product);
+		await userManager.UpdateAsync(user);
+		if (routeToBuy)
+		{
+			navigationManager.NavigateTo("Buy");
+		}
+	}
+}

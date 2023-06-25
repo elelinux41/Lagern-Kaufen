@@ -1,0 +1,32 @@
+﻿@using Microsoft.AspNetCore.Identity
+@using StoreBuy.Data
+
+@inject SignInManager<Costumer> SignInManager
+@inject UserManager<Costumer> UserManager
+
+<Actions>
+@if (SignInManager.IsSignedIn(User))
+{
+    <NavItem href="Identity/Account/Logout">
+        <CustomIcon>
+            <Icon Shape="logout" Solid="true"></Icon>
+        </CustomIcon>
+        <ChildContent>Log out</ChildContent>
+    </NavItem>
+}
+else
+{
+    <NavItem href="Identity/Account/Register">
+        <CustomIcon>
+            <Icon Shape="register" Solid="true"></Icon>
+        </CustomIcon>
+        <ChildContent>Register</ChildContent>
+    </NavItem>
+    <NavItem href="Identity/Account/Login">
+        <CustomIcon>
+            <Icon Shape="login" Solid="true"></Icon>
+        </CustomIcon>
+        <ChildContent>Log in</ChildContent>
+    </NavItem>
+}
+</Actions>

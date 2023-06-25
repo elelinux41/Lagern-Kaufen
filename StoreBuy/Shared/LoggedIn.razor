@@ -1,0 +1,45 @@
+﻿@using System.Security.Claims
+@using Microsoft.AspNetCore.Identity
+@inject AuthenticationStateProvider authenticationStateProvider
+
+<CascadingAuthenticationState>
+    <AuthorizeView>
+        <Authorized>
+            <NavItem href="Identity/Account/Login">
+                <CustomIcon>
+                    <Icon Shape="logout" Solid="true"></Icon>
+                </CustomIcon>
+                <ChildContent>Ausloggen</ChildContent>
+            </NavItem>
+            <NavItem>
+                Guten Tag, @user.Identity?.Name!
+            </NavItem>
+        </Authorized>
+        <NotAuthorized>
+            <NavItem href="Identity/Account/Register">
+                <CustomIcon>
+                    <Icon Shape="user" Solid="true"></Icon>
+                </CustomIcon>
+                <ChildContent>Registrieren</ChildContent>
+            </NavItem>
+            <NavItem href="Identity/Account/Login">
+                <CustomIcon>
+                    <Icon Shape="login" Solid="true"></Icon>
+                </CustomIcon>
+                <ChildContent>Einloggen</ChildContent>
+            </NavItem>
+        </NotAuthorized>
+    </AuthorizeView>
+</CascadingAuthenticationState>
+
+@code {
+    private ClaimsPrincipal user;
+    [CascadingParameter]
+    private Task<AuthenticationState> authenticationState { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authenticationStateProvider.GetAuthenticationStateAsync();
+        user = authState.User;
+    }
+}
